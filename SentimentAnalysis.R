@@ -69,3 +69,51 @@ setup_twitter_oauth(consumer_key=consumerKey,
                     consumer_secret=consumerSecret,
                     access_token=accesstoken,
                     access_secret=accesssecret)
+
+##****************Step 3: Perform tweets extraction and data cleaning****************
+
+# Harvest the tweets
+all_tweets = searchTwitter("election", n=100, lang="en")
+
+tweets_df <- twListToDF(all_tweets)
+write.csv(tweets_df,"AllTweets.csv")
+
+# get the text
+tweet_txt=sapply(all_tweets,function(x) x$getText())
+
+# remove retweet entities
+tweet_txt = gsub("(RT|via)((?:\\b\\W*@\\w+)+)",
+                 "", tweet_txt)
+# remove at people
+tweet_txt = gsub("@\\w+", "", tweet_txt)
+# remove punctuation
+tweet_txt = gsub("[[:punct:]]", "", tweet_txt)
+# remove numbers
+tweet_txt = gsub("[[:digit:]]", "", tweet_txt)
+# remove html links
+tweet_txt = gsub("http\\w+", "", tweet_txt)
+# remove unnecessary spaces
+tweet_txt = gsub("[ \t]{2,}", "", tweet_txt)
+tweet_txt = gsub("^\\s+|\\s+$", "", tweet_txt)
+ 
+# define "tolower error handling" function
+try.error = function(x)
+{
+  # create missing value
+  y = NA
+  # tryCatch error
+  try_error = tryCatch(tolower(x),
+                       error=function(e) e)
+  # if not an error
+  if (!inherits(try_error, "error"))
+    y = tolower(x)
+  return(y)
+}
+# lower case using try.error with sapply
+tweet_txt = sapply(tweet_txt, try.error)
+
+# remove NAs in tweet_txt
+tweet_txt = tweet_txt[!is.na(tweet_txt)]
+names(tweet_txt) = NULL
+
+write.csv(tweet_txt, "CleanedTweets.csv")
