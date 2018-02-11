@@ -117,3 +117,41 @@ tweet_txt = tweet_txt[!is.na(tweet_txt)]
 names(tweet_txt) = NULL
 
 write.csv(tweet_txt, "CleanedTweets.csv")
+
+tweet_txt = removeWords(tweet_txt, stopwords(kind = "en"))
+
+# classify emotion
+class_emo = classify_emotion(tweet_txt, algorithm="bayes", prior=1.0)
+
+# get emotion best fit
+emotion = class_emo[,7]
+# substitute NA's by "unknown"
+emotion[is.na(emotion)] = "unknown"
+
+# classify polarity
+class_pol = classify_polarity(tweet_txt, algorithm="bayes")
+# get polarity best fit
+polarity = class_pol[,4]
+
+## *********Create data frame with the results and obtain some general statistics******
+# data frame with results
+sent_df = data.frame(text=tweet_txt, emotion=emotion,
+                     polarity=polarity, stringsAsFactors=FALSE)
+
+# sort data frame
+sent_df = within(sent_df,
+                 emotion <- factor(emotion, levels=names(sort(table(emotion), decreasing=TRUE))))
+
+sent_df1 = within(sent_df,
+                  polarity <- factor(polarity, levels=names(sort(table(polarity), decreasing=TRUE))))
+
+ggplot(sent_df, aes(x=emotion)) +
+  geom_bar(aes(y=..count.., fill=emotion)) +
+  scale_fill_brewer(palette="Dark2") +
+  labs(x="emotion categories", y="number of tweets", title="classification based on emotion") 
+
+
+## plot distribution of Polarity
+ggplot(sent_df1, aes(x=polarity)) +
+  geom_bar(aes(y=..count.., fill=polarity)) +
+  scale_fill_brewer(palette="Dark2")+labs(x="polarity categories", y="number of tweets",title="classification based on polarity")
