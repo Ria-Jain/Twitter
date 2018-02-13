@@ -155,3 +155,4 @@ ggplot(sent_df, aes(x=emotion)) +
 ggplot(sent_df1, aes(x=polarity)) +
   geom_bar(aes(y=..count.., fill=polarity)) +
   scale_fill_brewer(palette="Dark2")+labs(x="polarity categories", y="number of tweets",title="classification based on polarity")
+
